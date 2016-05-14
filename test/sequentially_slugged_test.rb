@@ -152,6 +152,23 @@ class SequentiallySluggedTest < TestCaseClass
       assert_equal "peu_euot-2", record2a.slug
     end
   end
+
+  test "should work with names with postfixes that aren't numbers" do
+    transaction do
+      record1 = model_class.create! :name => "Peugeuot"
+      assert_equal "peugeuot", record1.slug
+      record2 = model_class.create! :name => "Peugeuot S"
+      assert_equal "peugeuot-s", record2.slug
+
+      record1.name = "Another test name"
+      record1.slug = nil
+      record1.save!
+      assert_equal 'another-test-name', record1.slug
+
+      record3 = model_class.create! :name => "Peugeuot"
+      assert_equal "peugeuot", record3.slug
+    end
+  end
 end
 
 class SequentiallySluggedTestWithHistory < TestCaseClass
@@ -178,6 +195,99 @@ class SequentiallySluggedTestWithHistory < TestCaseClass
       record2.slug = nil
       record2.save!
       assert_equal 'test-name-2', record2.slug
+    end
+  end
+
+  test "should work with regeneration with history when slug already exists" do
+    transaction do
+      record1 = model_class.create! :name => "Test name"
+      record2 = model_class.create! :name => "Another test name"
+      assert_equal 'test-name', record1.slug
+      assert_equal 'another-test-name', record2.slug
+
+      record1.name = "One more test name"
+      record1.slug = nil
+      record1.save!
+      assert_equal 'one-more-test-name', record1.slug
+
+      record2.name = "Test name"
+      record2.slug = nil
+      record2.save!
+      assert_equal 'test-name-2', record2.slug
+    end
+  end
+
+  test "should work with regeneration with history when 2 slugs already exists and the first is changed" do
+    transaction do
+      record1 = model_class.create! :name => "Test name"
+      record2 = model_class.create! :name => "Test name"
+      record3 = model_class.create! :name => "Another test name"
+      assert_equal 'test-name', record1.slug
+      assert_equal 'test-name-2', record2.slug
+      assert_equal 'another-test-name', record3.slug
+
+      record1.name = "One more test name"
+      record1.slug = nil
+      record1.save!
+      assert_equal 'one-more-test-name', record1.slug
+
+      record3.name = "Test name"
+      record3.slug = nil
+      record3.save!
+      assert_equal 'test-name-3', record3.slug
+    end
+  end
+
+  test "should work with regeneration with history when 2 slugs already exists and the second is changed" do
+    transaction do
+      record1 = model_class.create! :name => "Test name"
+      record2 = model_class.create! :name => "Test name"
+      record3 = model_class.create! :name => "Another test name"
+      assert_equal 'test-name', record1.slug
+      assert_equal 'test-name-2', record2.slug
+      assert_equal 'another-test-name', record3.slug
+
+      record2.name = "One more test name"
+      record2.slug = nil
+      record2.save!
+      assert_equal 'one-more-test-name', record2.slug
+
+      record3.name = "Test name"
+      record3.slug = nil
+      record3.save!
+      assert_equal 'test-name-2', record3.slug
+    end
+  end
+
+  test "should work with regeneration with history when slugs already exists but was changed" do
+    transaction do
+      record1 = model_class.create! :name => "Test name"
+      assert_equal 'test-name', record1.slug
+
+      record1.name = "Another test name"
+      record1.slug = nil
+      record1.save!
+      assert_equal 'another-test-name', record1.slug
+
+      record2 = model_class.create! :name => "Test name"
+      assert_equal 'test-name-2', record2.slug
+    end
+  end
+
+  test "should work with names with postfixes that aren't numbers" do
+    transaction do
+      record1 = model_class.create! :name => "Peugeuot"
+      assert_equal "peugeuot", record1.slug
+      record2 = model_class.create! :name => "Peugeuot"
+      assert_equal "peugeuot-2", record2.slug
+
+      record1.name = "Peugeuot s"
+      record1.slug = nil
+      record1.save!
+      assert_equal 'peugeuot-s', record1.slug
+
+      record3 = model_class.create! :name => "Peugeuot"
+      assert_equal "peugeuot-3", record3.slug
     end
   end
 end
